@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.http import HttpResponse
 from data import (tours, departures,
-                    title as title_main,
-                    subtitle as subtitle_main,
-                    description as description_main)
+                  title as title_main,
+                  subtitle as subtitle_main,
+                  description as description_main)
 from random import sample
 
 for i in tours:
@@ -25,18 +25,17 @@ def main_view(request):
     for i in tour_keys:
         random_tours[i] = tours[i]
     context["tours"] = random_tours
+    context["header"] = departures
 
     return render(request, "tours/index.html", context)
 
 
 def departure_view(request, departure):
-    
     container_header = dict()
     container_header["from"] = departures.get(departure)
     if not container_header["from"]:
         return HttpResponse('City doesnt exist', status=404)
     container_header["from"] = container_header["from"][0].lower() + container_header["from"][1:]
-    
     tours_from_city = dict()
     context = dict()
     max_nights, min_nights, max_price, min_price = 0, 0, 0, 0
@@ -52,13 +51,17 @@ def departure_view(request, departure):
             if min_price == 0 or tours[i]["price"] < min_price:
                 min_price = tours[i]["price"]
 
-    if not tours:
+    if not tours_from_city:
         container_header["info"] = "Найдено 0 туров."
     else:
-        container_header["info"] = "Найдено {} туров, от {} до {} и от {} ночей до {} ночей".format(len(tours_from_city),
-                                        min_price, max_price, min_nights, max_nights)
+        container_header["info"] = """Найдено {} туров,
+                                    от {} до {} и от {} ночей до {} ночей
+                                    """.format(len(tours_from_city),
+                                               min_price, max_price,
+                                               min_nights, max_nights)
     context["tours"] = tours_from_city
     context["container_header"] = container_header
+    context["header"] = departures
     return render(request, "tours/departure.html", context)
 
 
@@ -67,6 +70,7 @@ def tour_view(request, tour_id):
         return HttpResponse('This tour doesnt exist', status=404)
     departure = departures[tours[tour_id]["departure"]]
     context = {"tour": tours[tour_id], "departure": departure}
+    context["header"] = departures
     return render(request, "tours/tour.html", context)
 
 
