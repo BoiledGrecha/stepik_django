@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from tours.views import main_view, departure_view, tour_view, error_handler
+from tours.views import main_view, departure_view, tour_view, error_handler404, error_handler500
 
 
 urlpatterns = [
@@ -26,5 +26,5 @@ urlpatterns = [
 
 ]
 
-handler404 = error_handler
-handler500 = error_handler
+handler404 = error_handler404
+handler500 = error_handler500
