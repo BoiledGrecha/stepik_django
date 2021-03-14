@@ -7,7 +7,8 @@ from data import (tours, departures,
 from random import sample
 
 for i in tours:
-    tours[i]["real_stars"] = int(tours[i]["stars"]) * "★"
+    tours[i]["real_stars"] = tours[i].get("real_stars", int(tours[i]["stars"]) * "★")
+    tours[i]["short_description"] = tours[i].get("short_description", tours[i]["description"].split(".")[0] + ".")
 
 
 def main_view(request):
@@ -23,14 +24,42 @@ def main_view(request):
     random_tours = dict()
     for i in tour_keys:
         random_tours[i] = tours[i]
-        random_tours[i]["short_description"] = random_tours[i].get("short_description", random_tours[i]["description"].split(".")[0] + ".")
     context["tours"] = random_tours
 
     return render(request, "tours/index.html", context)
 
 
 def departure_view(request, departure):
-    return render(request, "tours/departure.html")
+    
+    container_header = dict()
+    container_header["from"] = departures.get(departure)
+    if not container_header["from"]:
+        return HttpResponse('City doesnt exist', status=404)
+    container_header["from"] = container_header["from"][0].lower() + container_header["from"][1:]
+    
+    tours_from_city = dict()
+    context = dict()
+    max_nights, min_nights, max_price, min_price = 0, 0, 0, 0
+    for i in tours.keys():
+        if tours[i].get("departure", "") == departure:
+            tours_from_city[i] = tours[i]
+            if tours[i]["nights"] > max_nights:
+                max_nights = tours[i]["nights"]
+            if tours[i]["price"] > max_price:
+                max_price = tours[i]["price"]
+            if min_nights == 0 or tours[i]["nights"] < min_nights:
+                min_nights = tours[i]["nights"]
+            if min_price == 0 or tours[i]["price"] < min_price:
+                min_price = tours[i]["price"]
+
+    if not tours:
+        container_header["info"] = "Найдено 0 туров."
+    else:
+        container_header["info"] = "Найдено {} туров, от {} до {} и от {} ночей до {} ночей".format(len(tours_from_city),
+                                        min_price, max_price, min_nights, max_nights)
+    context["tours"] = tours_from_city
+    context["container_header"] = container_header
+    return render(request, "tours/departure.html", context)
 
 
 def tour_view(request, tour_id):
